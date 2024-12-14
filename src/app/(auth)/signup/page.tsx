@@ -13,12 +13,19 @@ export default function SignupPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
   const supabase = createClient();
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
+    setError('');
+
     const { error } = await supabase.auth.signUp({ email, password });
+
+    setLoading(false);
+
     if (error) {
       setError(error.message);
     } else {
@@ -67,8 +74,8 @@ export default function SignupPage() {
                 </div>
               </div>
             )}
-            <Button type="submit" className="w-full">
-              Sign up
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? 'Signing up...' : 'Sign up'}
             </Button>
           </form>
         </CardContent>

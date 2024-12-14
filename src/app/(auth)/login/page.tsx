@@ -13,16 +13,22 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
+    setError('');
+
     const supabase = createClient();
 
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
+
+    setLoading(false);
 
     if (error) {
       setError(error.message);
@@ -72,8 +78,8 @@ export default function LoginPage() {
                 </div>
               </div>
             )}
-            <Button type="submit" className="w-full">
-              Login
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? 'Logging in...' : 'Login'}
             </Button>
           </form>
         </CardContent>
