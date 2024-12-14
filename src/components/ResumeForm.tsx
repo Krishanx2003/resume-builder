@@ -1,5 +1,6 @@
 "use client"
 import { useState } from 'react';
+import ResumePdfDownload from './ResumePdfDownload';
 
 const ResumeForm: React.FC = () => {
   const [title, setTitle] = useState('');
@@ -8,10 +9,11 @@ const ResumeForm: React.FC = () => {
   const [phone, setPhone] = useState('');
   const [location, setLocation] = useState('');
   const [template, setTemplate] = useState('template1'); // Added template selection
+  const [resumeCreated, setResumeCreated] = useState(false);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleCreatePDF = async () => {
+  const handleCreateResume = async () => {
     if (!title || !fullName || !email || !phone || !location) {
       setMessage('Please fill out all fields.');
       return;
@@ -21,7 +23,7 @@ const ResumeForm: React.FC = () => {
     setMessage('');
 
     try {
-      const response = await fetch('/api/generate-resume-pdf', {
+      const response = await fetch('/api/resumes', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -32,17 +34,16 @@ const ResumeForm: React.FC = () => {
           email,
           phone,
           location,
-          template,
         }),
       });
 
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = 'Resume.pdf';
-      link.click();
-      setMessage('Resume downloaded successfully!');
+      if (response.ok) {
+        setResumeCreated(true);
+        setMessage('Resume created successfully!');
+      } else {
+        const errorData = await response.json();
+        setMessage(`Error: ${errorData.error || 'Something went wrong.'}`);
+      }
     } catch (error: any) {
       setMessage(`Error: ${error.message || 'Something went wrong.'}`);
     } finally {
@@ -97,7 +98,7 @@ const ResumeForm: React.FC = () => {
         <option value="template3">Template 3</option>
       </select>
       <button
-        onClick={handleCreatePDF}
+        onClick={handleCreateResume}
         disabled={loading}
         style={{
           width: '100%',
@@ -110,8 +111,18 @@ const ResumeForm: React.FC = () => {
           cursor: 'pointer',
         }}
       >
-        {loading ? 'Generating PDF...' : 'Download Resume'}
+        {loading ? 'Creating Resume...' : 'Create Resume'}
       </button>
+      {resumeCreated && (
+        <ResumePdfDownload
+          title={title}
+          fullName={fullName}
+          email={email}
+          phone={phone}
+          location={location}
+          template={template}
+        />
+      )}
       {message && <p style={{ color: message.includes('Error') ? 'red' : 'green' }}>{message}</p>}
     </div>
   );
