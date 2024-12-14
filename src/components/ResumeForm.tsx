@@ -1,6 +1,4 @@
-// components/ResumeForm.tsx
-"use client";
-
+"use client"
 import { useState } from 'react';
 
 const ResumeForm: React.FC = () => {
@@ -9,10 +7,11 @@ const ResumeForm: React.FC = () => {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [location, setLocation] = useState('');
+  const [template, setTemplate] = useState('template1'); // Added template selection
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleCreateResume = async () => {
+  const handleCreatePDF = async () => {
     if (!title || !fullName || !email || !phone || !location) {
       setMessage('Please fill out all fields.');
       return;
@@ -22,7 +21,7 @@ const ResumeForm: React.FC = () => {
     setMessage('');
 
     try {
-      const response = await fetch('/api/resumes', {
+      const response = await fetch('/api/generate-resume-pdf', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -33,16 +32,17 @@ const ResumeForm: React.FC = () => {
           email,
           phone,
           location,
+          template,
         }),
       });
 
-      const result = await response.json();
-
-      if (response.ok) {
-        setMessage('Resume created successfully!');
-      } else {
-        setMessage(`Error: ${result.error || 'Something went wrong.'}`);
-      }
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'Resume.pdf';
+      link.click();
+      setMessage('Resume downloaded successfully!');
     } catch (error: any) {
       setMessage(`Error: ${error.message || 'Something went wrong.'}`);
     } finally {
@@ -87,12 +87,30 @@ const ResumeForm: React.FC = () => {
         placeholder="Location"
         style={{ width: '100%', padding: '10px', margin: '10px 0', border: '1px solid #ccc', borderRadius: '4px' }}
       />
-      <button
-        onClick={handleCreateResume}
-        disabled={loading}
-        style={{ width: '100%', padding: '10px', margin: '10px 0', backgroundColor: '#007BFF', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+      <select
+        value={template}
+        onChange={(e) => setTemplate(e.target.value)}
+        style={{ width: '100%', padding: '10px', margin: '10px 0', border: '1px solid #ccc', borderRadius: '4px' }}
       >
-        {loading ? 'Creating...' : 'Create Resume'}
+        <option value="template1">Template 1</option>
+        <option value="template2">Template 2</option>
+        <option value="template3">Template 3</option>
+      </select>
+      <button
+        onClick={handleCreatePDF}
+        disabled={loading}
+        style={{
+          width: '100%',
+          padding: '10px',
+          margin: '10px 0',
+          backgroundColor: '#007BFF',
+          color: 'white',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: 'pointer',
+        }}
+      >
+        {loading ? 'Generating PDF...' : 'Download Resume'}
       </button>
       {message && <p style={{ color: message.includes('Error') ? 'red' : 'green' }}>{message}</p>}
     </div>
