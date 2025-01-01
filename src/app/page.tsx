@@ -1,5 +1,4 @@
 
-import ResumeTemplate from '@/components/ResumeTemplate';
 import React from 'react';
 
 const HomePage: React.FC = () => {

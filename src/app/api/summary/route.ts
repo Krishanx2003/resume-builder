@@ -1,0 +1,25 @@
+import { createClient } from '@/lib/server';
+import { NextRequest, NextResponse } from 'next/server';
+
+// POST request handler
+export async function POST(request: NextRequest) {
+  try {
+    const supabase = createClient();
+    const { summary } = await request.json();
+
+    const { data, error } = await (await supabase)
+      .from('summaries')
+      .insert([{ summary }]);
+
+    if (error) {
+      console.error('Error inserting summary:', error.message);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    console.log('Summary created successfully:', data);
+    return NextResponse.json(data, { status: 201 });
+  } catch (error) {
+    console.error('Unexpected error:', error);
+    return NextResponse.json({ error: 'Unexpected error' }, { status: 500 });
+  }
+}
